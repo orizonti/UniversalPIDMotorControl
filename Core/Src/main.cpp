@@ -1,4 +1,3 @@
-
 /* USER CODE BEGIN Header */
 /**
   ******************************************************************************
@@ -18,15 +17,17 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
+#include "main.h"
+
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
 extern "C"
 {
+#include "socket.h"
 #include "stdio.h"
 #include "string.h"
+#include "W5500/w5500.h"
 }
-
-#include <TCPInterfaceW5500.hpp>
-#include <main.hpp>
-
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -36,7 +37,6 @@ extern "C"
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -50,7 +50,6 @@ SPI_HandleTypeDef hspi1;
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -64,22 +63,24 @@ char OutputBuffer[100];
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-class TestClass
+void DebugMessage(char* Mess)
 {
-public:
-	int x = 0;
-	int x1 = 0;
-	int x2 = 0;
-	void print();
-};
+	HAL_UART_Transmit_IT(&huart1, (const uint8_t*)Mess, strlen(Mess));
+	HAL_Delay(10);
+}
 
+void DebugMessageBuff()
+{
+	HAL_UART_Transmit_IT(&huart1, (const uint8_t*)OutputBuffer, strlen(OutputBuffer));
+	HAL_Delay(10);
+}
 /* USER CODE END 0 */
 
 /**
   * @brief  The application entry point.
   * @retval int
   */
-extern "C" int main(void)
+int main(void)
 {
   /* USER CODE BEGIN 1 */
 
@@ -106,10 +107,6 @@ extern "C" int main(void)
   MX_SPI1_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  TestClass cc;
-  cc.print();
-
-  TestClassTT<float> TT1;
 
   /* USER CODE END 2 */
 
@@ -264,25 +261,29 @@ static void MX_USART1_UART_Init(void)
   */
 static void MX_GPIO_Init(void)
 {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
 /* USER CODE BEGIN MX_GPIO_Init_1 */
 /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOC_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, Reset_Pin|SPI1_CS_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pins : Reset_Pin SPI1_CS_Pin */
+  GPIO_InitStruct.Pin = Reset_Pin|SPI1_CS_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
-void TestClass::print()
-{
-   sprintf(OutputBuffer,"TEST: %d %d %d \r\n", x, x1, x2);
-   HAL_UART_Transmit_IT(&huart1, (uint8_t*)OutputBuffer, strlen(OutputBuffer));
-   HAL_Delay(1000);
-}
 
 
 /* USER CODE END 4 */

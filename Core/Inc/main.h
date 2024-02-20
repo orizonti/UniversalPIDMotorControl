@@ -28,6 +28,7 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32g4xx_hal.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -35,6 +36,9 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
+
+void DebugMessage(char* Mess);
+void DebugMessageBuff();
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -51,9 +55,14 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
+
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define Reset_Pin GPIO_PIN_3
+#define Reset_GPIO_Port GPIOA
+#define SPI1_CS_Pin GPIO_PIN_4
+#define SPI1_CS_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 
