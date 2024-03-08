@@ -1,11 +1,7 @@
 #include "DataStorageEngine.h"
 
-PIDParam DataStorageEngine::GetPIDParam(int Number) {
-	// TODO - implement DataStorageEngine::GetPIDParam
-	throw "Not yet implemented";
+PIDParamStruct DataStorageEngine::GetPIDParam(int Number) {
 }
 
 void DataStorageEngine::LoadPIDParamsFromMemory() {
-	// TODO - implement DataStorageEngine::LoadPIDParamsFromMemory
-	throw "Not yet implemented";
 }

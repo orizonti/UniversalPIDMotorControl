@@ -1,5 +1,6 @@
-#ifndef GENERICSIGNALCONTROL_H
-#define GENERICSIGNALCONTROL_H
+#ifndef GENERICSIGNALCONTROL   _H
+#define GENERICSIGNALCONTROL   _H
+#include "GenericSignalControl.h"
 
 class GenericSignalControl {
 

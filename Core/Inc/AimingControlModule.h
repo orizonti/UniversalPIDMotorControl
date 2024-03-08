@@ -6,7 +6,7 @@
 
 #include "DataStorageEngine.h"
 #include "DebugSerialInterface.h"
-#include "GenereicSignalControl.h"
+#include "GenericSignalControl.h"
 #include "GenericEngineControl.h"
 #include "GenericSignalControl.h"
 #include "MessageIterator.h"

@@ -1,5 +1,5 @@
 #include <main.h>
-#include <TCPInterface.hpp>
+#include <TCPInterface.h>
 
 #define WORK_SOCKET 0
 

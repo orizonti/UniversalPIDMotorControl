@@ -1,10 +1,12 @@
 #ifndef GENERICENGINECONTROL_H
 #define GENERICENGINECONTROL_H
+#include "GenericSignalControl.h"
+#include "DataStructs.h"
 
 class GenericEngineControl {
 
 private:
-	GenericSignalControl___ ControlInterface;
+	GenericSignalControl ControlInterface;
 
 public:
 	void PerfromCommand(MotorControlCommandStruct Command);

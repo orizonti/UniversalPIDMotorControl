@@ -1,5 +1,6 @@
 #ifndef MOTORCONTROLCOMMANDSTRUCT_H
 #define MOTORCONTROLCOMMANDSTRUCT_H
+#include "DataStructs.h"
 
 class MotorControlCommandStruct {
 
