@@ -18,6 +18,8 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "cmsis_os.h"
+#include "app_fatfs.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -47,9 +49,61 @@ extern "C"
 
 /* Private variables ---------------------------------------------------------*/
 SPI_HandleTypeDef hspi1;
+SPI_HandleTypeDef hspi2;
 
 UART_HandleTypeDef huart1;
 
+//  const char                   *name;   ///< name of the thread
+//  uint32_t                 attr_bits;   ///< attribute bits
+//  void                      *cb_mem;    ///< memory for control block
+//  uint32_t                   cb_size;   ///< size of provided memory for control block
+//  void                   *stack_mem;    ///< memory for stack
+//  uint32_t                stack_size;   ///< size of stack
+//  osPriority_t              priority;   ///< initial thread priority (default: osPriorityNormal)
+//  TZ_ModuleId_t            tz_module;   ///< TrustZone module identifier
+//  uint32_t                  reserved;   ///< reserved (must be 0)
+
+/* Definitions for defaultTask */
+osThreadId_t defaultTaskHandle;
+const osThreadAttr_t defaultTask_attributes = {
+  .name = "defaultTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal
+};
+/* Definitions for RemoteCtrlTask */
+osThreadId_t RemoteCtrlTaskHandle;
+const osThreadAttr_t RemoteCtrlTask_attributes = {
+  .name = "RemoteCtrlTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal
+};
+/* Definitions for AimingCtrlTask */
+osThreadId_t AimingCtrlTaskHandle;
+const osThreadAttr_t AimingCtrlTask_attributes = {
+  .name = "AimingCtrlTask",
+  .stack_size = 128 * 4
+  //.priority = (osPriority_t) osPriorityNormal1,
+};
+/* Definitions for QueueRegimCtrl */
+osMessageQueueId_t QueueRegimCtrlHandle;
+const osMessageQueueAttr_t QueueRegimCtrl_attributes = {
+  .name = "QueueRegimCtrl"
+};
+/* Definitions for QueueMotorControl */
+osMessageQueueId_t QueueMotorControlHandle;
+const osMessageQueueAttr_t QueueMotorControl_attributes = {
+  .name = "QueueMotorControl"
+};
+/* Definitions for QueueAimingSignal */
+osMessageQueueId_t QueueAimingSignalHandle;
+const osMessageQueueAttr_t QueueAimingSignal_attributes = {
+  .name = "QueueAimingSignal"
+};
+/* Definitions for QueueMonitoringState */
+osMessageQueueId_t QueueMonitoringStateHandle;
+const osMessageQueueAttr_t QueueMonitoringState_attributes = {
+  .name = "QueueMonitoringState"
+};
 /* USER CODE BEGIN PV */
 /* USER CODE END PV */
 
@@ -58,12 +112,30 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_USART1_UART_Init(void);
+static void MX_SPI2_Init(void);
+void StartDefaultTask(void *argument);
+void RemoteControlTask(void *argument);
+void AimingControlTask(void *argument);
+
 /* USER CODE BEGIN PFP */
 char OutputBuffer[100];
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+__attribute__((weak)) int _write(int file, char *ptr, int len)
+{
+  (void)file;
+  int DataIdx;
+
+  for (DataIdx = 0; DataIdx < len; DataIdx++)
+  {
+	HAL_UART_Transmit_IT(&huart1, (const uint8_t*)ptr, len);
+  }
+  return len;
+}
+
 void DebugMessage(char* Mess)
 {
 	HAL_UART_Transmit_IT(&huart1, (const uint8_t*)Mess, strlen(Mess));
@@ -107,10 +179,68 @@ int main(void)
   MX_GPIO_Init();
   MX_SPI1_Init();
   MX_USART1_UART_Init();
+  MX_SPI2_Init();
+  //if (MX_FATFS_Init() != APP_OK) {
+  //  Error_Handler();
+  //}
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
 
+  /* Init scheduler */
+  osKernelInitialize();
+
+  /* USER CODE BEGIN RTOS_MUTEX */
+  /* add mutexes, ... */
+  /* USER CODE END RTOS_MUTEX */
+
+  /* USER CODE BEGIN RTOS_SEMAPHORES */
+  /* add semaphores, ... */
+  /* USER CODE END RTOS_SEMAPHORES */
+
+  /* USER CODE BEGIN RTOS_TIMERS */
+  /* start timers, add new ones, ... */
+  /* USER CODE END RTOS_TIMERS */
+
+  /* Create the queue(s) */
+  /* creation of QueueRegimCtrl */
+  QueueRegimCtrlHandle = osMessageQueueNew (2, sizeof(uint32_t), &QueueRegimCtrl_attributes);
+
+  /* creation of QueueMotorControl */
+  QueueMotorControlHandle = osMessageQueueNew (8, sizeof(uint32_t), &QueueMotorControl_attributes);
+
+  /* creation of QueueAimingSignal */
+  QueueAimingSignalHandle = osMessageQueueNew (4, sizeof(uint16_t), &QueueAimingSignal_attributes);
+
+  /* creation of QueueMonitoringState */
+  QueueMonitoringStateHandle = osMessageQueueNew (4, sizeof(uint16_t), &QueueMonitoringState_attributes);
+
+  /* USER CODE BEGIN RTOS_QUEUES */
+  /* add queues, ... */
+  /* USER CODE END RTOS_QUEUES */
+
+  /* Create the thread(s) */
+  /* creation of defaultTask */
+  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+
+  /* creation of RemoteCtrlTask */
+  RemoteCtrlTaskHandle = osThreadNew(RemoteControlTask, NULL, &RemoteCtrlTask_attributes);
+
+  /* creation of AimingCtrlTask */
+  AimingCtrlTaskHandle = osThreadNew(AimingControlTask, NULL, &AimingCtrlTask_attributes);
+
+  /* USER CODE BEGIN RTOS_THREADS */
+  /* add threads, ... */
+  /* USER CODE END RTOS_THREADS */
+
+  /* USER CODE BEGIN RTOS_EVENTS */
+  /* add events, ... */
+  /* USER CODE END RTOS_EVENTS */
+
+  /* Start scheduler */
+  osKernelStart();
+
+  /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -208,6 +338,46 @@ static void MX_SPI1_Init(void)
 }
 
 /**
+  * @brief SPI2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SPI2_Init(void)
+{
+
+  /* USER CODE BEGIN SPI2_Init 0 */
+
+  /* USER CODE END SPI2_Init 0 */
+
+  /* USER CODE BEGIN SPI2_Init 1 */
+
+  /* USER CODE END SPI2_Init 1 */
+  /* SPI2 parameter configuration*/
+  hspi2.Instance = SPI2;
+  hspi2.Init.Mode = SPI_MODE_MASTER;
+  hspi2.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi2.Init.NSS = SPI_NSS_SOFT;
+  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
+  hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi2.Init.CRCPolynomial = 7;
+  hspi2.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
+  hspi2.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
+  if (HAL_SPI_Init(&hspi2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI2_Init 2 */
+
+  /* USER CODE END SPI2_Init 2 */
+
+}
+
+/**
   * @brief USART1 Initialization Function
   * @param None
   * @retval None
@@ -269,6 +439,7 @@ static void MX_GPIO_Init(void)
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, Reset_Pin|SPI1_CS_Pin, GPIO_PIN_RESET);
@@ -288,6 +459,81 @@ static void MX_GPIO_Init(void)
 
 
 /* USER CODE END 4 */
+
+/* USER CODE BEGIN Header_StartDefaultTask */
+/**
+  * @brief  Function implementing the defaultTask thread.
+  * @param  argument: Not used
+  * @retval None
+  */
+/* USER CODE END Header_StartDefaultTask */
+void StartDefaultTask(void *argument)
+{
+  /* USER CODE BEGIN 5 */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END 5 */
+}
+
+/* USER CODE BEGIN Header_RemoteControlTask */
+/**
+* @brief Function implementing the RemoteCtrlTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_RemoteControlTask */
+void RemoteControlTask(void *argument)
+{
+  /* USER CODE BEGIN RemoteControlTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END RemoteControlTask */
+}
+
+/* USER CODE BEGIN Header_AimingControlTask */
+/**
+* @brief Function implementing the AimingCtrlTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_AimingControlTask */
+void AimingControlTask(void *argument)
+{
+  /* USER CODE BEGIN AimingControlTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END AimingControlTask */
+}
+
+/**
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM3 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* USER CODE BEGIN Callback 0 */
+
+  /* USER CODE END Callback 0 */
+  if (htim->Instance == TIM3) {
+    HAL_IncTick();
+  }
+  /* USER CODE BEGIN Callback 1 */
+
+  /* USER CODE END Callback 1 */
+}
 
 /**
   * @brief  This function is executed in case of error occurrence.
