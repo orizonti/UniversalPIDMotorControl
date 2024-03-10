@@ -1,5 +1,5 @@
-#ifndef GENERICSIGNALCONTROL   _H
-#define GENERICSIGNALCONTROL   _H
+#ifndef GENERICSIGNALCONTROL_H
+#define GENERICSIGNALCONTROL_H
 #include "GenericSignalControl.h"
 #include "ControlDataStructs.h"
 

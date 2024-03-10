@@ -1,8 +1,9 @@
 #ifndef DEBUGSERIALINTERFACE_H
 #define DEBUGSERIALINTERFACE_H
 
-class DebugSerialInterface {
 
+class DebugSerialInterface 
+{
 private:
 	char OutputBuffer[100];
 

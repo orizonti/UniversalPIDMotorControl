@@ -31,6 +31,7 @@ extern "C"
 #include "W5500/w5500.h"
 }
 #include "ControlDataStructs.h"
+#include "RemoteControlInterface.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -52,16 +53,6 @@ SPI_HandleTypeDef hspi1;
 SPI_HandleTypeDef hspi2;
 
 UART_HandleTypeDef huart1;
-
-//  const char                   *name;   ///< name of the thread
-//  uint32_t                 attr_bits;   ///< attribute bits
-//  void                      *cb_mem;    ///< memory for control block
-//  uint32_t                   cb_size;   ///< size of provided memory for control block
-//  void                   *stack_mem;    ///< memory for stack
-//  uint32_t                stack_size;   ///< size of stack
-//  osPriority_t              priority;   ///< initial thread priority (default: osPriorityNormal)
-//  TZ_ModuleId_t            tz_module;   ///< TrustZone module identifier
-//  uint32_t                  reserved;   ///< reserved (must be 0)
 
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
@@ -136,17 +127,6 @@ int _write(int file, char *ptr, int len)
   return len;
 }
 
-void DebugMessage(char* Mess)
-{
-	HAL_UART_Transmit_IT(&huart1, (const uint8_t*)Mess, strlen(Mess));
-	HAL_Delay(10);
-}
-
-void DebugMessageBuff()
-{
-	HAL_UART_Transmit_IT(&huart1, (const uint8_t*)OutputBuffer, strlen(OutputBuffer));
-	HAL_Delay(10);
-}
 /* USER CODE END 0 */
 
 /**
@@ -185,6 +165,7 @@ int main(void)
   //}
   /* USER CODE BEGIN 2 */
 
+  printf("START PROGRAM %d ", 10);
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -204,16 +185,16 @@ int main(void)
 
   /* Create the queue(s) */
   /* creation of QueueRegimCtrl */
-  QueueRegimCtrlHandle = osMessageQueueNew (2, sizeof(uint32_t), &QueueRegimCtrl_attributes);
+  QueueRegimCtrlHandle = osMessageQueueNew (2, sizeof(AimingRegimStruct), &QueueRegimCtrl_attributes);
 
   /* creation of QueueMotorControl */
-  QueueMotorControlHandle = osMessageQueueNew (8, sizeof(uint32_t), &QueueMotorControl_attributes);
+  QueueMotorControlHandle = osMessageQueueNew (8, sizeof(MotorControlCommandStruct), &QueueMotorControl_attributes);
 
   /* creation of QueueAimingSignal */
   QueueAimingSignalHandle = osMessageQueueNew (4, sizeof(AimingSignalStruct), &QueueAimingSignal_attributes);
 
   /* creation of QueueMonitoringState */
-  QueueMonitoringStateHandle = osMessageQueueNew (4, sizeof(uint16_t), &QueueMonitoringState_attributes);
+  QueueMonitoringStateHandle = osMessageQueueNew (4, sizeof(AimingMonitoringStruct), &QueueMonitoringState_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -457,6 +438,17 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
+void DebugMessage(char* Mess)
+{
+	HAL_UART_Transmit_IT(&huart1, (const uint8_t*)Mess, strlen(Mess));
+	HAL_Delay(10);
+}
+
+void DebugMessageBuff()
+{
+	HAL_UART_Transmit_IT(&huart1, (const uint8_t*)OutputBuffer, strlen(OutputBuffer));
+	HAL_Delay(10);
+}
 
 /* USER CODE END 4 */
 
@@ -488,11 +480,15 @@ void StartDefaultTask(void *argument)
 void RemoteControlTask(void *argument)
 {
   /* USER CODE BEGIN RemoteControlTask */
+  
+  RemoteControlInterface ControlInterface;
+  ControlInterface.INIT_INTERFACE();
+  ControlInterface.RUN_INTERFACE();
   /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
+  //for(;;)
+  //{
+  //  osDelay(1);
+  //}
   /* USER CODE END RemoteControlTask */
 }
 
