@@ -30,7 +30,7 @@ extern "C"
 #include "string.h"
 #include "W5500/w5500.h"
 }
-#include "DataStructs.h"
+#include "ControlDataStructs.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -124,7 +124,7 @@ char OutputBuffer[100];
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-__attribute__((weak)) int _write(int file, char *ptr, int len)
+int _write(int file, char *ptr, int len)
 {
   (void)file;
   int DataIdx;
@@ -210,7 +210,7 @@ int main(void)
   QueueMotorControlHandle = osMessageQueueNew (8, sizeof(uint32_t), &QueueMotorControl_attributes);
 
   /* creation of QueueAimingSignal */
-  QueueAimingSignalHandle = osMessageQueueNew (4, sizeof(uint16_t), &QueueAimingSignal_attributes);
+  QueueAimingSignalHandle = osMessageQueueNew (4, sizeof(AimingSignalStruct), &QueueAimingSignal_attributes);
 
   /* creation of QueueMonitoringState */
   QueueMonitoringStateHandle = osMessageQueueNew (4, sizeof(uint16_t), &QueueMonitoringState_attributes);

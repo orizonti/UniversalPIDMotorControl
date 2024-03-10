@@ -1,7 +1,6 @@
 #ifndef GENERICENGINECONTROL_H
 #define GENERICENGINECONTROL_H
 #include "GenericSignalControl.h"
-#include "DataStructs.h"
 
 class GenericEngineControl {
 

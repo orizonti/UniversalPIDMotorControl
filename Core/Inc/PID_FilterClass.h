@@ -1,6 +1,6 @@
 #ifndef PID_FILTERCLASS_H
 #define PID_FILTERCLASS_H
-#include "DataStructs.h"
+#include "ControlDataStructs.h"
 #include <utility>
 
 class PID_FilterClass {

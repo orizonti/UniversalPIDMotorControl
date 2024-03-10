@@ -1,6 +1,7 @@
 #ifndef REMOTECONTROLINTERFACE_H
 #define REMOTECONTROLINTERFACE_H
-#include "DataStructs.h"
+#include "ControlDataStructs.h"
+#include "cmsis_os.h"
 
 class RemoteControlInterface {
 

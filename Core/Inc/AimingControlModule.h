@@ -2,7 +2,7 @@
 #define AIMINGCONTROLMODULE_H
 
 
-#include "DataStructs.h"
+#include "ControlDataStructs.h"
 
 #include "DataStorageEngine.h"
 #include "DebugSerialInterface.h"
@@ -15,15 +15,16 @@
 #include "RemoteControlInterface.h"
 #include "VoltageControlInterface.h"
 
+
 class AimingControlModule {
 
 private:
 	PID_FilterClass PIDFilter;
 	GenericEngineControl Engine1;
 	GenericEngineControl Engine2;
-	//xQueueHandle MotorDirectControlQueue;
 	AimingMonitoringStruct AimingMonitoringData;
 	MotorControlCommandStruct MotorControlCommand;
+	AimingSignalStruct AimingSignal;
 
 public:
 	void RUN_AIMING_CONTROL();

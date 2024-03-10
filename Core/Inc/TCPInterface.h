@@ -1,6 +1,6 @@
 #ifndef TCPINTERFACE_H
 #define TCPINTERFACE_H
-#include "DataStructs.h"
+#include "ControlDataStructs.h"
 #include "MessageIterator.h"
 
 

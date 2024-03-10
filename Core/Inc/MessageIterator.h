@@ -1,6 +1,6 @@
 #ifndef MESSAGEITERATOR_H
 #define MESSAGEITERATOR_H
-#include "MESSAGE.h"
+#include "ControlDataStructs.h"
 
 class MessageIterator {
 
