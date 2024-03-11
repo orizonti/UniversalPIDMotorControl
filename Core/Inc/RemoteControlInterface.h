@@ -10,6 +10,7 @@ private:
 	AimingSignalStruct AimingSignal;
 	AimingRegimStruct* AimingRegim;
 	MotorControlCommandStruct* MotorDirectControl;
+
 public:
 	void INIT_INTERFACE();
 
