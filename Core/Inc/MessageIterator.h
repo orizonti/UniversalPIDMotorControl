@@ -6,11 +6,10 @@ class MessageIterator {
 
 private:
 	uint8_t* RawDataMessagePointer;
-
+    
 public:
-	MessageIterator operator++();
-
-	MESSAGE operator*();
+	void operator++();
+	MESSAGE& operator*();
 };
 
 #endif

@@ -12,35 +12,42 @@ public:
 W5500InterfaceClass();
 
 wiz_NetInfo NetParam;
-bool InterfaceEstablished = false;
-int  SocketNumber = 0;
+static bool InterfaceEstablished;
+static int SocketChannelCounter;
+
+ uint8_t SocketNumber = 0;
+uint16_t PortNumber   = 2323;
+
+uint8_t DataReceived = 0;
 
 void W5500_Init();
-void W5500_SocketCreate();
+void SocketCreate(int NumberSocket);
+int GetDataFromEthernet(int BytesNumber);
 };
 
 class TCPInterface {
 
 private:
-	uint8_t InputBufferSize;
-	uint8_t InputWaitDataSize;
-	uint8_t InputPackAvailableCount;
-	MessageIterator InputPackAvailablePointer;
+	uint8_t  InputBufferSize = 200;
+	uint8_t  InputWaitDataSize = 0;
+
 	uint8_t* InputDataIncommingPointer;
 	uint8_t* InputBuffer;
 
-	MESSAGE* CurrentMessage ;
+	uint8_t InputPackAvailableCount = 0;
+	MessageIterator InputPackAvailablePointer;
+
+	W5500InterfaceClass* EthernetInterface;
 
 public:
-	int GetDataAvailable();
+    TCPInterface();
+    ~TCPInterface();
+	int  GetDataAvailable();
+	int  GetPacksAvailable();
+	int  RecData();
+	void SendData(uint8_t* Data, uint8_t DataSize);
 
-	int GetPacksAvailable();
-
-	void SendData(uint8_t Data, uint8_t DataSize);
-
-	int RecData();
-
-	MESSAGE* TakeCurrentMessage();
+	MESSAGE TakeCurrentMessage();
 };
 
 

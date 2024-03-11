@@ -6,6 +6,24 @@
 
 extern char OutputBuffer[100];
 
+TCPInterface::TCPInterface()
+{
+
+	InputBuffer = new uint8_t[InputBufferSize];
+	InputDataIncommingPointer = InputBuffer;
+	InputPackAvailablePointer = InputBuffer;
+
+
+	EthernetInterface = new W5500InterfaceClass;
+	EthernetInterface->SocketCreate();
+}
+
+TCPInterface::~TCPInterface()
+{
+	delete EthernetInterface;
+	delete InputBuffer;
+
+}
 
 
 int TCPInterface::GetDataAvailable()
@@ -16,29 +34,40 @@ int TCPInterface::GetPacksAvailable()
 {
    return 0;
 }
-void TCPInterface::SendData(uint8_t Data, uint8_t DataSize)
+void TCPInterface::SendData(uint8_t* Data, uint8_t DataSize)
 {
-
+    send(0,Data,DataSize);
 }
 int TCPInterface::RecData()
 {
-       InputWaitDataSize = recv(0,(uint8_t*)InputBuffer,10);
 
 return InputWaitDataSize;
 }
 
 
-MESSAGE* TCPInterface::TakeCurrentMessage()
+MESSAGE TCPInterface::TakeCurrentMessage()
 {
-return CurrentMessage;
+return *InputPackAvailablePointer;
 }
 
 //==============================================================
+
+int W5500InterfaceClass::GetDataFromEthernet(int BytesNumber)
+{
+       DataReceived = recv(0,(uint8_t*)InputBuffer,10);
+	   return DataReceived;
+}
+
 W5500InterfaceClass::W5500InterfaceClass()
 {
 
-if(!this->InterfaceEstablished) 
-{
+if(W5500InterfaceClass::SocketChannelCounter >= 8) return;
+
+SocketNumber = W5500InterfaceClass::SocketChannelCounter;  //CAN CREATE UP TO EIGHT SOCKETS
+W5500InterfaceClass::SocketChannelCounter++;
+
+if(W5500InterfaceClass::InterfaceEstablished) return;
+
 wiz_NetInfo NetParam = { .mac = {0x00, 0x08, 0xdc, 0xab, 0xcd, 0xef},
                             .ip = {192, 168, 3, 178},
                             .sn = {255, 255, 255, 0},
@@ -46,8 +75,8 @@ wiz_NetInfo NetParam = { .mac = {0x00, 0x08, 0xdc, 0xab, 0xcd, 0xef},
                             .dns = {0, 0, 0, 0},
                             .dhcp = NETINFO_STATIC };
 W5500_Init();
-}
 
+W5500InterfaceClass::InterfaceEstablished = true;
 
 }
 
@@ -77,39 +106,37 @@ void W5500InterfaceClass::W5500_Init()
 
 
 
-void W5500InterfaceClass::W5500_SocketCreate()
+void W5500InterfaceClass::SocketCreate(int NumberSocket)
 {
-	int STAT = 0;
-	printf("CREATING SOCKET \r\n");
-    STAT = socket(WORK_SOCKET, Sn_MR_TCP, 2323, 0);
 
-       if(STAT != WORK_SOCKET) { printf(OutputBuffer, "SOCKET() ERROR: %d \r\n", STAT);}
-	   else printf("SOCKET CREATED, CONNECTING \r\n");
+	int Result = 0;
+    Result = socket(NumberSocket, Sn_MR_TCP, PortNumber, 0);
 
-    STAT = listen(WORK_SOCKET);
+       if(Result != 0)  printf(OutputBuffer, "SOCKET CREATE ERROR: %d \r\n", Result);
 
-	   if(STAT != SOCK_OK) { printf(OutputBuffer, "LISTEN() ERROR: %d \r\n", STAT); }
-       else printf("listen() OK\r\n");
+    Result = listen(NumberSocket);
 
-	while(getSn_SR(WORK_SOCKET) == SOCK_LISTEN)
-    {
-			HAL_Delay(2);
-    }
+	   if(Result != SOCK_OK)  printf(OutputBuffer, "SOCKET LISTEN ERROR: %d \r\n", Result); 
 
-    printf("INPUT CONNECTION \r\n");
-    if(getSn_SR(WORK_SOCKET) != SOCK_ESTABLISHED) printf("ERROR SOCKET STATUS \r\n");
+	while(getSn_SR(NumberSocket) == SOCK_LISTEN) { HAL_Delay(2); }
+
+
+    if(getSn_SR(NumberSocket) != SOCK_ESTABLISHED) printf("ERROR SOCKET STATUS \r\n");
 
     uint8_t rIP[4];
-    getsockopt(WORK_SOCKET, SO_DESTIP, rIP);
+    getsockopt(NumberSocket, SO_DESTIP, rIP);
 
-	printf("CONNECTION ESTABLISHED \r\n");
-	printf(OutputBuffer, "IP:  %d.%d.%d.%d\r\n", rIP[0], rIP[1], rIP[2], rIP[3]); 
+		printf("CONNECTION ESTABLISHED \r\n");
 
-	printf(OutputBuffer, "CONNECTION ESTABLISHED");
+		sprintf(OutputBuffer, "IP:  %d.%d.%d.%d\r\n", rIP[0], rIP[1], rIP[2], rIP[3]); 
+		sprintf(OutputBuffer, "CONNECTION ESTABLISHED");
+
     send(0, (uint8_t*)OutputBuffer, strlen(OutputBuffer));
 
 	HAL_Delay(1000);
 }
 
+bool W5500InterfaceClass::InterfaceEstablished = false;
+bool W5500InterfaceClass::SocketChannelCounter = 0;
 
 //=======================================================

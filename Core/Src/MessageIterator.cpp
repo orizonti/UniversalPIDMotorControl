@@ -1,7 +1,11 @@
 #include "MessageIterator.h"
 
-MessageIterator MessageIterator::operator++() {
+void MessageIterator::operator++() 
+{
+
 }
 
-MESSAGE MessageIterator::operator*() {
+MESSAGE& MessageIterator::operator*() 
+{
+    return *reinterpret_cast<MESSAGE*>(RawDataMessagePointer);
 }
